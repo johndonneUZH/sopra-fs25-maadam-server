@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDate;
 
 /**
  * User Service
@@ -30,7 +31,6 @@ public class UserService {
 
   private final UserRepository userRepository;
 
-  @Autowired
   public UserService(@Qualifier("userRepository") UserRepository userRepository) {
     this.userRepository = userRepository;
   }
@@ -42,6 +42,11 @@ public class UserService {
   public User createUser(User newUser) {
     newUser.setToken(UUID.randomUUID().toString());
     newUser.setStatus(UserStatus.OFFLINE);
+    newUser.setDate(LocalDate.now());
+    newUser.setPassword(newUser.getPassword());
+
+    System.out.println(newUser.toString());
+
     checkIfUserExists(newUser);
     // saves the given entity but data is only persisted in the database once
     // flush() is called

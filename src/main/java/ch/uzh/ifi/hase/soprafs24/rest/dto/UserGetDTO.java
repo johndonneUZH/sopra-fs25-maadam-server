@@ -8,6 +8,7 @@ public class UserGetDTO {
   private String name;
   private String username;
   private UserStatus status;
+  private String password;
 
   public Long getId() {
     return id;
@@ -39,5 +40,13 @@ public class UserGetDTO {
 
   public void setStatus(UserStatus status) {
     this.status = status;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 }

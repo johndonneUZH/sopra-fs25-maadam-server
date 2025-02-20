@@ -59,6 +59,20 @@ jacocoTestReport {
     }
 }
 
+// sonar {
+
+//     properties {
+
+//         property "sonar.projectKey", "TODO"
+
+//         property "sonar.organization", "TODO"
+
+//         property "sonar.host.url", "TODO"
+
+//     }
+
+// }
+
 test {
     useJUnitPlatform()
     testLogging.showStandardStreams = true

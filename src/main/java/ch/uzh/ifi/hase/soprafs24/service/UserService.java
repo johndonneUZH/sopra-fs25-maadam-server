@@ -5,7 +5,6 @@ import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -43,15 +42,14 @@ public class UserService {
     newUser.setToken(UUID.randomUUID().toString());
     newUser.setStatus(UserStatus.OFFLINE);
     newUser.setDate(LocalDate.now());
-    newUser.setPassword(newUser.getPassword());
-
-    System.out.println(newUser.toString());
 
     checkIfUserExists(newUser);
     // saves the given entity but data is only persisted in the database once
     // flush() is called
     newUser = userRepository.save(newUser);
     userRepository.flush();
+
+    System.out.println("Saved User: " + newUser.toString());
 
     log.debug("Created Information for User: {}", newUser);
     return newUser;
@@ -81,4 +79,10 @@ public class UserService {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
     }
   }
+
+  public User getUserById(Long id) {
+    return userRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+  }
+
 }

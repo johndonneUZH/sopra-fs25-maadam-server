@@ -1,5 +1,7 @@
 package ch.uzh.ifi.hase.soprafs24.rest.dto;
 
+import java.time.LocalDate;
+
 import ch.uzh.ifi.hase.soprafs24.constant.UserStatus;
 
 public class UserGetDTO {
@@ -8,7 +10,9 @@ public class UserGetDTO {
   private String name;
   private String username;
   private UserStatus status;
-  private String password;
+  private LocalDate date;
+  private LocalDate birthday;
+  private String token;
 
   public Long getId() {
     return id;
@@ -42,11 +46,27 @@ public class UserGetDTO {
     this.status = status;
   }
 
-  public String getPassword() {
-    return password;
+  public LocalDate getDate() {
+    return date;
+  }
+  
+  public void setDate(LocalDate date) {
+    this.date = date;
   }
 
-  public void setPassword(String password) {
-    this.password = password;
+  public LocalDate getBirthday() {
+    return birthday;
+  }
+
+  public void setBirthday(LocalDate birthday) {
+    this.birthday = birthday;
+  }
+
+  public String getToken() {
+    return token;
+  }
+
+  public void setToken(String token) {
+    this.token = token;
   }
 }

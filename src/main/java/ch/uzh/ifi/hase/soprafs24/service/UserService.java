@@ -3,6 +3,8 @@ package ch.uzh.ifi.hase.soprafs24.service;
 import ch.uzh.ifi.hase.soprafs24.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs24.entity.User;
 import ch.uzh.ifi.hase.soprafs24.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs24.rest.dto.UserPutDTO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -89,6 +91,10 @@ public class UserService {
     return userRepository.findByToken(token);
   }
 
+  public User getUserByUsername(String username) {
+    return userRepository.findByUsername(username);
+  }
+
   public User loginUser(User userToBeLoggedIn) {
     User userByUsername = userRepository.findByUsername(userToBeLoggedIn.getUsername());
 
@@ -105,4 +111,52 @@ public class UserService {
 
     return userByUsername;
   }
+
+  // public void logoutUser(User userToBeLoggedOut) {
+  //   User userByUsername = userRepository.findByUsername(userToBeLoggedOut.getUsername());
+
+  //   if (userByUsername == null) {
+  //     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+  //   }
+
+  //   userByUsername.setStatus(UserStatus.OFFLINE);
+  //   userRepository.saveAndFlush(userByUsername);
+  // }
+
+  public User editUser(User userToBeEdited, UserPutDTO userPutDTO) {
+    if (userPutDTO == null) {
+        throw new IllegalArgumentException("User data cannot be null");
+    }
+
+    if (userPutDTO.getUsername() != null && !userPutDTO.getUsername().equals(userToBeEdited.getUsername())) {
+        User existingUser = userRepository.findByUsername(userPutDTO.getUsername());
+        if (existingUser != null && !existingUser.getId().equals(userToBeEdited.getId())) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+    }
+
+    // Validate username is not null or empty
+    if (userPutDTO.getUsername() == null || userPutDTO.getUsername().trim().isEmpty()) {
+        throw new IllegalArgumentException("Username cannot be empty");
+    }
+
+    // Validate birthday is not in the future
+    if (userPutDTO.getBirthday() != null && userPutDTO.getBirthday().isAfter(LocalDate.now())) {
+        throw new IllegalArgumentException("Birthday cannot be in the future");
+    }
+
+    // Update the user's details
+    if (userPutDTO.getUsername() != null) {
+        userToBeEdited.setUsername(userPutDTO.getUsername());
+    }
+
+    if (userPutDTO.getBirthday() != null) {
+        userToBeEdited.setBirthday(userPutDTO.getBirthday());
+    }
+
+    // Save the updated user
+    return userRepository.save(userToBeEdited);
+  }
 }
+
+

@@ -85,6 +85,10 @@ public class UserService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
   }
 
+  public User getUserByToken(String token) {
+    return userRepository.findByToken(token);
+  }
+
   public User loginUser(User userToBeLoggedIn) {
     User userByUsername = userRepository.findByUsername(userToBeLoggedIn.getUsername());
 

@@ -85,4 +85,20 @@ public class UserService {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
   }
 
+  public User loginUser(User userToBeLoggedIn) {
+    User userByUsername = userRepository.findByUsername(userToBeLoggedIn.getUsername());
+
+    if (userByUsername == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+    }
+
+    if (!userByUsername.getPassword().equals(userToBeLoggedIn.getPassword())) {
+      throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Password is incorrect");
+    }
+
+    userByUsername.setStatus(UserStatus.ONLINE);
+    userRepository.saveAndFlush(userByUsername);
+
+    return userByUsername;
+  }
 }

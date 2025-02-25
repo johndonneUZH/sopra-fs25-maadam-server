@@ -83,9 +83,7 @@ public class UserController {
   @ResponseStatus(HttpStatus.OK)
   @ResponseBody
   public UserGetDTO getUserById(@PathVariable Long id) {
-      System.out.println(String.format("Received request for user with ID: %d", id));
       User user = userService.getUserById(id);
-      System.out.println(String.format("Found user: {}", user));
       return DTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
   }
 
@@ -97,22 +95,52 @@ public class UserController {
           if (user == null) {
               return ResponseEntity
                   .status(HttpStatus.NOT_FOUND)
-                  .body(Map.of("status", "error", "message", "User not found"));
+                  .body(Map.of("reason", "User with userId " + id + " was not found"));
           }
-  
+
           // Update the user
           userService.editUser(user, userPutDTO);
-          return ResponseEntity
-              .ok(Map.of("status", "success", "message", "User edited successfully"));
+
+          // Return 204 No Content on success
+          return ResponseEntity.noContent().build();
       } catch (IllegalArgumentException e) {
           return ResponseEntity
               .badRequest()
-              .body(Map.of("status", "error", "message", e.getMessage()));
+              .body(Map.of("reason", e.getMessage()));
       } catch (Exception e) {
           return ResponseEntity
               .status(HttpStatus.INTERNAL_SERVER_ERROR)
-              .body(Map.of("status", "error", "message", "Failed to update profile: " + e.getMessage()));
+              .body(Map.of("reason", "Failed to update profile: " + e.getMessage()));
       }
   }
+
+  
+
+  // @PutMapping("/users/logout")
+  // @ResponseStatus(HttpStatus.OK)
+  // public ResponseEntity<Map<String, String>> logoutUser(@RequestBody UserPutDTO userPutDTO) {
+  //   try {
+  //     // Fetch the user by ID
+  //     User user = userService.getUserById(userPutDTO.getId());
+  //     if (user == null) {
+  //       return ResponseEntity
+  //           .status(HttpStatus.NOT_FOUND)
+  //           .body(Map.of("status", "error", "message", "User not found"));
+  //     }
+
+  //     // Update the user
+  //     userService.logoutUser(user);
+  //     return ResponseEntity
+  //         .ok(Map.of("status", "success", "message", "User logged out successfully"));
+  //   } catch (IllegalArgumentException e) {
+  //     return ResponseEntity
+  //         .badRequest()
+  //         .body(Map.of("status", "error", "message", e.getMessage()));
+  //   } catch (Exception e) {
+  //     return ResponseEntity
+  //         .status(HttpStatus.INTERNAL_SERVER_ERROR)
+  //         .body(Map.of("status", "error", "message", "Failed to logout user: " + e.getMessage()));
+  //   }
+  // }
   
 }

@@ -42,7 +42,7 @@ public class UserService {
 
   public User createUser(User newUser) {
     newUser.setToken(UUID.randomUUID().toString());
-    newUser.setStatus(UserStatus.OFFLINE);
+    newUser.setStatus(UserStatus.ONLINE);
     newUser.setDate(LocalDate.now());
 
     checkIfUserExists(newUser);
@@ -110,16 +110,10 @@ public class UserService {
     return userByUsername;
   }
 
-  // public void logoutUser(User userToBeLoggedOut) {
-  //   User userByUsername = userRepository.findByUsername(userToBeLoggedOut.getUsername());
-
-  //   if (userByUsername == null) {
-  //     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-  //   }
-
-  //   userByUsername.setStatus(UserStatus.OFFLINE);
-  //   userRepository.saveAndFlush(userByUsername);
-  // }
+  public void logoutUser(User userToBeLoggedOut) {
+    userToBeLoggedOut.setStatus(UserStatus.OFFLINE);
+    userRepository.saveAndFlush(userToBeLoggedOut);
+  }
 
   public User editUser(User userToBeEdited, UserPutDTO userPutDTO) {
     if (userPutDTO == null) {

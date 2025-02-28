@@ -97,8 +97,12 @@ public class UserController {
   
       // Validate the token
       User authenticatedUser = userService.getUserByToken(authToken);
-      if (authToken == null || authenticatedUser == null) {
+      if (authToken == null) {
           throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+      }
+
+      if (authenticatedUser == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user with provided token"); 
       }
   
       // Fetch user if authentication passes

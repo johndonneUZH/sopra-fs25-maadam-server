@@ -86,8 +86,10 @@ public class UserService {
   }
 
   public User getUserByToken(String token) {
-    return userRepository.findByToken(token);
-  }
+    System.out.println("Searching for token: [" + token + "]");
+    return userRepository.findByToken(token.trim());
+}
+
 
   public User getUserByUsername(String username) {
     return userRepository.findByUsername(username);

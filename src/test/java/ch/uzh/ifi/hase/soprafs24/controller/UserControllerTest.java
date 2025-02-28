@@ -14,29 +14,27 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import org.springframework.boot.test.context.SpringBootTest; // Use this instead of @WebMvcTest
 
-/**
- * UserControllerTest
- * This is a WebMvcTest which allows to test the UserController i.e. GET/POST
- * request without actually sending them over the network.
- * This tests if the UserController works.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 public class UserControllerTest {
@@ -56,23 +54,26 @@ public class UserControllerTest {
   // Setup method to create a user for testing
   @BeforeEach
   public void setup() throws Exception {
-      // Clear the database before each test
+      // Clear the database
       userRepository.deleteAll();
+      userRepository.flush(); // Ensure deleteAll() is committed
   
-      // Create the user for the first time
+      // Create new user
       User user = new User();
       user.setUsername("admin");
       user.setPassword("admin");
       user.setToken(UUID.randomUUID().toString()); // Set the token
-      user.setStatus(UserStatus.ONLINE); // Set the status
-      user.setDate(LocalDate.now()); // Set the date
-      user.setBirthday(null); // Optional field
+      user.setStatus(UserStatus.ONLINE);
+      user.setDate(LocalDate.now());
+      user.setBirthday(null);
   
-      // Save the user to the database
-      User createdUser = userRepository.save(user);
-      ADMIN_TOKEN = createdUser.getToken(); // Retrieve the token from the database
+      // Save the user
+      User createdUser = userRepository.saveAndFlush(user); // Force immediate commit
+      ADMIN_TOKEN = createdUser.getToken(); // Store token for authentication
+      testUser = createdUser;
   
-      testUser = createdUser;  // Store the created user for subsequent tests
+      System.out.println("Setup completed!");
+      System.out.println("User ID: " + testUser.getId());
       System.out.println("Admin Token: " + ADMIN_TOKEN);
   }
 
@@ -90,28 +91,53 @@ public class UserControllerTest {
 
   @Test
   void POST_user_409() throws Exception {
-      // Attempt to create the same user again and expect 409 conflict
+      // Step 1: Create the first user
       UserPostDTO userPostDTO = new UserPostDTO();
-      userPostDTO.setUsername("admin");
-      userPostDTO.setPassword("admin");
-
+      userPostDTO.setUsername("testUser");
+      userPostDTO.setPassword("testPassword");
+  
       mockMvc.perform(post("/users")
               .contentType(MediaType.APPLICATION_JSON)
               .content(asJsonString(userPostDTO)))
+          .andExpect(status().isCreated());
+
+      userRepository.flush();
+  
+      // Verify that the first user was created
+      User firstUser = userRepository.findByUsername("testUser");
+      System.out.println("First User: " + firstUser);
+  
+      // Step 2: Attempt to create a duplicate user
+      UserPostDTO copyUserPostDTO = new UserPostDTO();
+      copyUserPostDTO.setUsername("testUser");
+      copyUserPostDTO.setPassword("testPassword");
+  
+      mockMvc.perform(post("/users")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(asJsonString(copyUserPostDTO)))
           .andExpect(status().isConflict());
   }
 
   @Test
   void GET_user_id_200() throws Exception {
+      // Check if the user is in the database
+      List<User> users = userRepository.findAll();
+      users.forEach(user -> System.out.println("DB User: " + user.getUsername() + ", Token: " + user.getToken()));
+  
+      System.out.println("Test User: " + testUser);
+      
+      // Verify the token
+      System.out.println("Sent Token: " + ADMIN_TOKEN);   
+      System.out.println("User: " + userRepository.findByToken(ADMIN_TOKEN.trim().replace("\"", "")));
+    
       // Use the stored test user for GET request
-      mockMvc.perform(get("/users/" + testUser.getId())
+      mockMvc.perform(get("/users/{id}", testUser.getId())
               .contentType(MediaType.APPLICATION_JSON)
-              .header("Authorization", ADMIN_TOKEN)) // Use the token
+              .header("Authorization", ADMIN_TOKEN.trim().replace("\"", ""))) // Use the token
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.username", is(testUser.getUsername())))
           .andExpect(jsonPath("$.status", is(testUser.getStatus().toString())));
   }
-
   @Test
   void PUT_user_204() throws Exception {
       // Perform a PUT request to update the user profile
@@ -137,37 +163,48 @@ public class UserControllerTest {
               .header("Authorization", ADMIN_TOKEN)) // Use the token
           .andExpect(status().isNotFound());
   }
-
   @Test
   public void createUser_validInput_userCreated() throws Exception {
       // given
-      User user = new User();
-      user.setId(1L);
-      user.setUsername("testUsername");
-      user.setPassword("testPassword");
-      user.setStatus(UserStatus.ONLINE);
-      user.setDate(LocalDate.now());
-      user.setBirthday(null);
-
       UserPostDTO userPostDTO = new UserPostDTO();
       userPostDTO.setUsername("testUsername");
       userPostDTO.setPassword("testPassword");
-
-      given(userService.createUser(Mockito.any())).willReturn(user);
-
+  
       // when/then -> do the request + validate the result
-      MockHttpServletRequestBuilder postRequest = post("/users")
+      mockMvc.perform(post("/users")
               .contentType(MediaType.APPLICATION_JSON)
-              .content(asJsonString(userPostDTO));
+              .content(asJsonString(userPostDTO)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.username", is("testUsername")))
+          .andExpect(jsonPath("$.status", is(UserStatus.ONLINE.toString())));
+  }
+  @Test
+  public void givenUsers_whenGetUsers_thenReturnJsonArray() throws Exception {
+      // given
+      User user = new User();
+      user.setUsername("firstname@lastname");
+      user.setPassword("password");
+      user.setStatus(UserStatus.OFFLINE);
+      user.setBirthday(null);
+      user.setDate(LocalDate.now());
+      user.setToken(UUID.randomUUID().toString());
+
+      // Persist the user in the database
+      userRepository.saveAndFlush(user);
+
+      // when
+      MockHttpServletRequestBuilder getRequest = get("/users")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", ADMIN_TOKEN);
 
       // then
-      mockMvc.perform(postRequest)
-          .andExpect(status().isCreated())
-          .andExpect(jsonPath("$.id", is(user.getId())))
-          .andExpect(jsonPath("$.username", is(user.getUsername())))
-          .andExpect(jsonPath("$.status", is(user.getStatus().toString())));
+      mockMvc.perform(getRequest)
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(2))) // There's also the admin in there
+          .andExpect(jsonPath("$[1].username", is(user.getUsername()))) // Verify the username
+          .andExpect(jsonPath("$[1].status", is(user.getStatus().toString()))) // Verify the status
+          .andExpect(jsonPath("$[1].date", is(user.getDate().toString())));
   }
-
   /**
    * Helper Method to convert userPostDTO into a JSON string such that the input
    * can be processed

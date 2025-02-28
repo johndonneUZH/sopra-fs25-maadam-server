@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,29 +113,34 @@ public class UserController {
 
 
   @PutMapping("/users/{id}")
-  public ResponseEntity<Void> editUser(
+  public ResponseEntity<?> editUser(
           @PathVariable Long id, 
           @RequestBody UserPutDTO userPutDTO,
           @RequestHeader(value = "Authorization", required = false) String authToken) {
       
       // Validate the token
       User authenticatedUser = userService.getUserByToken(authToken);
-      if (authToken == null || authenticatedUser == null) {
-          throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or missing token");
+      if (authToken == null) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or missing token");
       }
 
-      System.out.println("Received request to edit user: " + id);
-      System.out.println("Received request to edit user: " + authenticatedUser.getUsername());
-
-      if (authToken == null || authenticatedUser == null || !authenticatedUser.getId().equals(id)) {
-          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      if (authenticatedUser == null) {
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
       }
 
+      if (userService.getUserById(id) == null) {
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+      }
+  
+      if (!authenticatedUser.getId().equals(id)) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
+      }
+  
       try {
           // Fetch the user by ID
           User user = userService.getUserById(id);
           if (user == null) {
-              return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+              return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
           }
   
           // Update the user
@@ -143,9 +149,9 @@ public class UserController {
           // Return 204 No Content on success
           return ResponseEntity.noContent().build();
       } catch (IllegalArgumentException e) {
-          return ResponseEntity.badRequest().build();
+          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
       } catch (Exception e) {
-          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "An unexpected error occurred"));
       }
   }
   

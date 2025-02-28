@@ -139,7 +139,7 @@ public class UserControllerTest {
           .andExpect(jsonPath("$.status", is(testUser.getStatus().toString())));
   }
   @Test
-  void PUT_user_204() throws Exception {
+  void PUT_user_id_204() throws Exception {
       // Perform a PUT request to update the user profile
       UserPutDTO updatedDTO = new UserPutDTO();
       updatedDTO.setUsername("updatedUsername");
@@ -152,7 +152,7 @@ public class UserControllerTest {
   }
 
   @Test
-  void PUT_user_404() throws Exception {
+  void PUT_user_id_404() throws Exception {
       // Test case where user doesn't exist
       UserPutDTO updatedDTO = new UserPutDTO();
       updatedDTO.setUsername("nonExistentUsername");
@@ -163,6 +163,16 @@ public class UserControllerTest {
               .header("Authorization", ADMIN_TOKEN)) // Use the token
           .andExpect(status().isNotFound());
   }
+
+  @Test
+  void GET_user_id_404() throws Exception {
+    mockMvc.perform(get("/users/99999")
+        .contentType(MediaType.APPLICATION_JSON)
+        .header("Authorization", ADMIN_TOKEN)) // Use the token
+    .andExpect(status().isNotFound());
+  }
+
+
   @Test
   public void createUser_validInput_userCreated() throws Exception {
       // given

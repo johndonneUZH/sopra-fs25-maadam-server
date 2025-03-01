@@ -7,7 +7,7 @@ public class UserGetDTO {
 
   private Long id;
   private String username;
-  // private String token;
+  private String token;
   private UserStatus status;
   private LocalDate birthday;
   private LocalDate date;
@@ -28,13 +28,13 @@ public class UserGetDTO {
     this.username = username;
   }
 
-  // public String getToken() {
-  //   return token;
-  // }
+  public String getToken() {
+    return token;
+  }
 
-  // public void setToken(String token) {
-  //   this.token = token;
-  // }
+  public void setToken(String token) {
+    this.token = token;
+  }
 
   public UserStatus getStatus() {
     return status;

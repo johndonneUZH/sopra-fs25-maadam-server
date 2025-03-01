@@ -42,22 +42,18 @@ public class UserService {
 
   public User createUser(User newUser) {
     newUser.setStatus(UserStatus.ONLINE);
-    newUser.setDate(LocalDate.now());
-
-    User responeUser = newUser;
-    
+    newUser.setDate(LocalDate.now());    
     newUser.setToken(UUID.randomUUID().toString());
 
     checkIfUserExists(newUser);
-    // saves the given entity but data is only persisted in the database once
-    // flush() is called
+
     newUser = userRepository.save(newUser);
     userRepository.flush();
 
-    System.out.println("Saved User: " + responeUser.toString());
+    System.out.println("Saved User: " + newUser.toString());
 
-    log.debug("Created Information for User: {}", responeUser);
-    return responeUser;
+    log.debug("Created Information for User: {}", newUser);
+    return newUser;
   }
 
   /**

@@ -26,6 +26,11 @@ public interface DTOMapper {
 
   @Mapping(source = "username", target = "username")
   @Mapping(source = "password", target = "password")
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "token", ignore = true)
+  @Mapping(target = "date", ignore = true)
+  @Mapping(target = "birthday", ignore = true)
+  @Mapping(target = "status", ignore = true)
   User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
   @Mapping(source = "id", target = "id")
@@ -38,5 +43,10 @@ public interface DTOMapper {
 
   @Mapping(source = "username", target = "username")
   @Mapping(source = "birthday", target = "birthday")
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "token", ignore = true)
+  @Mapping(target = "date", ignore = true)
+  @Mapping(target = "status", ignore = true)
+  @Mapping(target = "password", ignore = true)
   User convertUserPutDTOtoEntity(UserPutDTO userPutDTO);
 }
